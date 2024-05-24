@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Windows Virtual Desktop Helper")]
 [assembly: AssemblyDescription("Simple and lightweight app to help with Virtual Desktops for Windows 10 and Windows 11")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Dan Krusi")]
+[assembly: AssemblyCompany("Dan Krusi & Schalk Conradie")]
 [assembly: AssemblyProduct("Windows Virtual Desktop Helper")]
 [assembly: AssemblyCopyright("Copyright © Dan Krusi 2022-2023")]
 [assembly: AssemblyTrademark("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // Note: When changing the version make sure to update the Setup project version
 // as well!
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-[assembly: AssemblyVersion("1.16.0.0")]
-[assembly: AssemblyFileVersion("1.16.0.0")]
+[assembly: AssemblyVersion("1.17.0.0")]
+[assembly: AssemblyFileVersion("1.17.0.0")]

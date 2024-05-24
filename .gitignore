@@ -396,3 +396,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /Installer/Output
+/.idea/.idea.WindowsVirtualDesktopHelper/.idea

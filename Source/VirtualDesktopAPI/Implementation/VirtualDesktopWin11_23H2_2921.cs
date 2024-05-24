@@ -7,10 +7,7 @@ using System.Runtime.InteropServices;
 using static WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation.VirtualDesktopWin11_Insider;
 
 namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
-
-
 	internal class VirtualDesktopWin11_23H2_2921 : IVirtualDesktopManager {
-
 		const string GUID_CLSID_ImmersiveShell = "C2F03A33-21F5-47FA-B4BB-156362A2F239";
 		const string GUID_CLSID_VirtualDesktopManagerInternal = "C5E0CDCA-7B6E-41B2-9FC4-D93975CC467B";
 		const string GUID_IApplicationView = "372E1D3B-38D3-42E4-A15B-8AB2B178F513";
@@ -50,6 +47,14 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 
 		public void SwitchToDesktop(int number) {
 			var desktop = DesktopManager.GetDesktopAtIndex(number);
+			
+			/*
+			 * To prevent going to desktops that aren't available.
+			 * A more elegant fix for this is required
+			 * TODO: Find a way to do this across all versions
+			*/
+			if (desktop is null) return;
+			
 			DesktopManager.VirtualDesktopManagerInternal.SwitchDesktop(desktop);
 		}
 
@@ -77,7 +82,9 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 
 		internal static class Guids {
 			public static readonly Guid CLSID_ImmersiveShell = new Guid(GUID_CLSID_ImmersiveShell);
-			public static readonly Guid CLSID_VirtualDesktopManagerInternal = new Guid(GUID_CLSID_VirtualDesktopManagerInternal);
+
+			public static readonly Guid CLSID_VirtualDesktopManagerInternal =
+				new Guid(GUID_CLSID_VirtualDesktopManagerInternal);
 		}
 
 		#endregion
@@ -123,7 +130,10 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 			int GetMonitor(out IntPtr /* IImmersiveMonitor */ immersiveMonitor);
 			int GetVisibility(out int visibility);
 			int SetCloak(APPLICATION_VIEW_CLOAK_TYPE cloakType, int unknown);
-			int GetPosition(ref Guid guid /* GUID for IApplicationViewPosition */, out IntPtr /* IApplicationViewPosition** */ position);
+
+			int GetPosition(ref Guid guid /* GUID for IApplicationViewPosition */,
+				out IntPtr /* IApplicationViewPosition** */ position);
+
 			int SetPosition(ref IntPtr /* IApplicationViewPosition* */ position);
 			int InsertAfterWindow(IntPtr hwnd);
 			int GetExtendedFramePosition(out Rect rect);
@@ -175,39 +185,46 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 		[Guid(GUID_IVirtualDesktop)]
 		internal interface IVirtualDesktop {
 			bool IsViewVisible(IApplicationView view);
-			Guid GetId();			
+			Guid GetId();
 			string GetName();
+
 			[return: MarshalAs(UnmanagedType.HString)]
 			string GetWallpaperPath();
+
 			bool IsRemote();
 		}
-				
+
 		[ComImport]
 		[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		[Guid(GUID_IVirtualDesktopManagerInternal)]		
+		[Guid(GUID_IVirtualDesktopManagerInternal)]
 		internal interface IVirtualDesktopManagerInternal {
 			int GetCount();
 			void MoveViewToDesktop(IApplicationView view, IVirtualDesktop desktop);
 			bool CanViewMoveDesktops(IApplicationView view);
 			IVirtualDesktop GetCurrentDesktop();
 			void GetDesktops(out IObjectArray desktops);
+
 			[PreserveSig]
 			int GetAdjacentDesktop(IVirtualDesktop from, int direction, out IVirtualDesktop desktop);
+
 			void SwitchDesktop(IVirtualDesktop desktop);
 			IVirtualDesktop CreateDesktop(IntPtr hWndOrMon);
 			void MoveDesktop(IVirtualDesktop desktop, IntPtr hWndOrMon, int nIndex);
 			void RemoveDesktop(IVirtualDesktop desktop, IVirtualDesktop fallback);
 			IVirtualDesktop FindDesktop(ref Guid desktopid);
-			void GetDesktopSwitchIncludeExcludeViews(IVirtualDesktop desktop, out IObjectArray unknown1, out IObjectArray unknown2);
+
+			void GetDesktopSwitchIncludeExcludeViews(IVirtualDesktop desktop, out IObjectArray unknown1,
+				out IObjectArray unknown2);
+
 			void SetDesktopName(IVirtualDesktop desktop, [MarshalAs(UnmanagedType.HString)] string name);
 			void SetDesktopWallpaper(IVirtualDesktop desktop, [MarshalAs(UnmanagedType.HString)] string path);
 			void UpdateWallpaperPathForAllDesktops([MarshalAs(UnmanagedType.HString)] string path);
 			void CopyDesktopState(IApplicationView pView0, IApplicationView pView1);
 			void CreateRemoteDesktop([MarshalAs(UnmanagedType.HString)] string path, out IVirtualDesktop desktop);
 			void SwitchRemoteDesktop(IVirtualDesktop desktop, Enum VirtualDesktopSwitchType);
-            void SwitchDesktopWithAnimation(IVirtualDesktop desktop);
-            void GetLastActiveDesktop(out IVirtualDesktop desktop);
-            void WaitForAnimationToComplete();
+			void SwitchDesktopWithAnimation(IVirtualDesktop desktop);
+			void GetLastActiveDesktop(out IVirtualDesktop desktop);
+			void WaitForAnimationToComplete();
 		}
 
 		[ComImport]
@@ -234,8 +251,10 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 			internal static IVirtualDesktopManagerInternal VirtualDesktopManagerInternal;
 
 			static DesktopManager() {
-				var shell = (IServiceProvider10)Activator.CreateInstance(Type.GetTypeFromCLSID(Guids.CLSID_ImmersiveShell));
-				VirtualDesktopManagerInternal = (IVirtualDesktopManagerInternal)shell.QueryService(Guids.CLSID_VirtualDesktopManagerInternal, typeof(IVirtualDesktopManagerInternal).GUID);
+				var shell = (IServiceProvider10)Activator.CreateInstance(
+					Type.GetTypeFromCLSID(Guids.CLSID_ImmersiveShell));
+				VirtualDesktopManagerInternal = (IVirtualDesktopManagerInternal)shell.QueryService(
+					Guids.CLSID_VirtualDesktopManagerInternal, typeof(IVirtualDesktopManagerInternal).GUID);
 			}
 
 			internal static int GetDesktopIndex(IVirtualDesktop desktop) {
@@ -251,6 +270,7 @@ namespace WindowsVirtualDesktopHelper.VirtualDesktopAPI.Implementation {
 						break;
 					}
 				}
+
 				Marshal.ReleaseComObject(desktops);
 				return index;
 			}
